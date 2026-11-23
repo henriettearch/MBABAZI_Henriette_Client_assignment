@@ -1,15 +1,18 @@
+
 {
   "name": "loyalty-system",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:all": "concurrently -k \"npm:dev\" \"cd backend && ./venv/bin/python manage.py runserver\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",
+    "concurrently": "^9.2.1",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0"
@@ -21,3 +24,4 @@
     "tailwindcss": "4.3.3"
   }
 }
+
