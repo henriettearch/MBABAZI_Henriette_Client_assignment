@@ -26,7 +26,7 @@ export default function CashierDashboard() {
       setCashier(session.user);
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/customers/",
+        "/api/backend/customers/",
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
@@ -66,7 +66,7 @@ export default function CashierDashboard() {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/customers/?search=${encodeURIComponent(search)}`,
+        `/api/backend/customers/?search=${encodeURIComponent(search)}`,
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
