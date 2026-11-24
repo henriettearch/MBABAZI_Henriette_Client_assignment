@@ -16,8 +16,10 @@ export default function CashierDashboard() {
     setError("");
 
     try {
-      const { data: { session }, error: sessionError } =
-        await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
       if (sessionError || !session) {
         throw new Error("Please log in to access the cashier dashboard.");
@@ -25,19 +27,16 @@ export default function CashierDashboard() {
 
       setCashier(session.user);
 
-      const response = await fetch(
-        "/api/backend/customers/",
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        }
-      );
+      const response = await fetch("/api/backend/customers/", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Unable to load customers.");
+        throw new Error(data.error || data.detail || "Unable to load customers.");
       }
 
       setCustomers(data);
@@ -58,8 +57,9 @@ export default function CashierDashboard() {
     setError("");
 
     try {
-      const { data: { session } } =
-        await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (!session) {
         throw new Error("Please log in again.");
@@ -77,7 +77,7 @@ export default function CashierDashboard() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Search failed.");
+        throw new Error(data.error || data.detail || "Search failed.");
       }
 
       setCustomers(data);
@@ -99,137 +99,104 @@ export default function CashierDashboard() {
   );
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#f4f7f4",
-      fontFamily: "Arial, sans-serif"
-    }}>
-      <header style={{
-        background: "#176b3a",
-        color: "white",
-        padding: "22px 5%",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }}>
+    <div style={styles.page}>
+      <header style={styles.header}>
         <div>
-          <h1>FreshMart</h1>
-          <p>Cashier Dashboard</p>
+          <h1 style={styles.logo}>FreshMart</h1>
+          <p style={styles.headerSubtitle}>Cashier Dashboard</p>
         </div>
 
-        <button onClick={logout} style={{
-          padding: "10px 18px",
-          border: "none",
-          borderRadius: "7px",
-          cursor: "pointer"
-        }}>
+        <button onClick={logout} style={styles.logoutButton}>
           Logout
         </button>
       </header>
 
-      <main style={{
-        maxWidth: "1100px",
-        margin: "auto",
-        padding: "35px 20px"
-      }}>
-        <h2>Welcome, Cashier!</h2>
+      <main style={styles.main}>
+        <h2 style={styles.welcome}>Welcome, Cashier!</h2>
 
-        <p style={{ color: "#666" }}>
+        <p style={styles.email}>
           {cashier?.email || "Loading cashier account..."}
         </p>
 
-        {error && (
-          <p style={{ color: "red" }}>{error}</p>
-        )}
+        {error && <div style={styles.error}>{error}</div>}
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "20px",
-          margin: "30px 0"
-        }}>
-          <div style={cardStyle}>
-            <h3>Total Customers</h3>
-            <h1>{customers.length}</h1>
+        <div style={styles.grid}>
+          <div style={styles.card}>
+            <h3 style={styles.cardTitle}>Total Customers</h3>
+            <h1 style={styles.number}>{customers.length}</h1>
           </div>
 
-          <div style={cardStyle}>
-            <h3>Points in Results</h3>
-            <h1>{totalPoints}</h1>
+          <div style={styles.card}>
+            <h3 style={styles.cardTitle}>Points in Results</h3>
+            <h1 style={styles.number}>{totalPoints}</h1>
           </div>
 
-          <div style={cardStyle}>
-            <h3>Staff Account</h3>
-            <p>{cashier ? "Logged in" : "Checking..."}</p>
+          <div style={styles.card}>
+            <h3 style={styles.cardTitle}>Staff Account</h3>
+            <p style={styles.staffStatus}>
+              {cashier ? "Logged in" : "Checking..."}
+            </p>
           </div>
         </div>
 
-        <section style={cardStyle}>
-          <h2>Customer Management</h2>
-          <p>Search customers by name, email or phone number.</p>
+        <section style={styles.card}>
+          <h2 style={styles.sectionTitle}>Customer Management</h2>
+
+          <p style={styles.description}>
+            Search customers by name, email or phone number.
+          </p>
 
           <form onSubmit={searchCustomers}>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search customers..."
-              style={{
-                width: "100%",
-                padding: "13px",
-                margin: "15px 0",
-                border: "1px solid #ccc",
-                borderRadius: "7px"
-              }}
+              style={styles.input}
             />
 
-            <button type="submit" style={buttonStyle}>
-              Search Customers
-            </button>
+            <div style={styles.buttonGroup}>
+              <button type="submit" style={styles.searchButton}>
+                Search Customers
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                loadDashboard();
-              }}
-              style={{
-                ...buttonStyle,
-                background: "#555",
-                marginLeft: "10px"
-              }}
-            >
-              Show All
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  loadDashboard();
+                }}
+                style={styles.showAllButton}
+              >
+                Show All
+              </button>
+            </div>
           </form>
 
           {loading ? (
-            <p>Loading customers...</p>
+            <p style={styles.loading}>Loading customers...</p>
           ) : (
-            <div style={{ overflowX: "auto", marginTop: "20px" }}>
-              <table style={{
-                width: "100%",
-                borderCollapse: "collapse"
-              }}>
+            <div style={styles.tableWrapper}>
+              <table style={styles.table}>
                 <thead>
-                  <tr style={{ background: "#e7f3e9" }}>
-                    <th style={cellStyle}>Customer</th>
-                    <th style={cellStyle}>Email</th>
-                    <th style={cellStyle}>Phone</th>
-                    <th style={cellStyle}>Loyalty Points</th>
+                  <tr style={styles.tableHeader}>
+                    <th style={styles.cell}>Customer</th>
+                    <th style={styles.cell}>Email</th>
+                    <th style={styles.cell}>Phone</th>
+                    <th style={styles.cell}>Loyalty Points</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {customers.map((customer) => (
-                    <tr key={customer.id}>
-                      <td style={cellStyle}>
+                    <tr key={customer.id} style={styles.tableRow}>
+                      <td style={styles.cell}>
                         {customer.first_name} {customer.last_name}
                       </td>
-                      <td style={cellStyle}>{customer.email}</td>
-                      <td style={cellStyle}>
+                      <td style={styles.cell}>{customer.email}</td>
+                      <td style={styles.cell}>
                         {customer.phone || "N/A"}
                       </td>
-                      <td style={cellStyle}>
+                      <td style={styles.points}>
                         {customer.loyalty_points}
                       </td>
                     </tr>
@@ -238,7 +205,9 @@ export default function CashierDashboard() {
               </table>
 
               {customers.length === 0 && (
-                <p>No customers found.</p>
+                <p style={styles.empty}>
+                  No customers found.
+                </p>
               )}
             </div>
           )}
@@ -248,26 +217,198 @@ export default function CashierDashboard() {
   );
 }
 
-const cardStyle = {
-  background: "white",
-  padding: "24px",
-  borderRadius: "10px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-  marginBottom: "20px"
-};
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background: "#f1f5f2",
+    fontFamily: "Arial, sans-serif",
+    color: "#172b1d",
+  },
 
-const buttonStyle = {
-  background: "#176b3a",
-  color: "white",
-  padding: "12px 20px",
-  border: "none",
-  borderRadius: "7px",
-  cursor: "pointer"
-};
+  header: {
+    background: "#14532d",
+    color: "#ffffff",
+    padding: "22px 5%",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: "15px",
+  },
 
-const cellStyle = {
-  padding: "13px",
-  borderBottom: "1px solid #eee",
-  textAlign: "left"
-};
+  logo: {
+    margin: 0,
+    fontSize: "28px",
+    fontWeight: "bold",
+    color: "#ffffff",
+  },
 
+  headerSubtitle: {
+    margin: "5px 0 0",
+    color: "#e0f2e5",
+  },
+
+  logoutButton: {
+    padding: "11px 20px",
+    background: "#ffffff",
+    color: "#991b1b",
+    border: "1px solid #ffffff",
+    borderRadius: "7px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+
+  main: {
+    maxWidth: "1100px",
+    margin: "auto",
+    padding: "35px 20px",
+  },
+
+  welcome: {
+    color: "#14532d",
+    fontSize: "27px",
+    marginBottom: "8px",
+  },
+
+  email: {
+    color: "#475569",
+    fontSize: "15px",
+  },
+
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "20px",
+    margin: "30px 0",
+  },
+
+  card: {
+    background: "#ffffff",
+    padding: "24px",
+    borderRadius: "12px",
+    border: "1px solid #dce8df",
+    boxShadow: "0 3px 10px rgba(0,0,0,0.06)",
+    marginBottom: "20px",
+  },
+
+  cardTitle: {
+    color: "#475569",
+    fontSize: "16px",
+    marginTop: 0,
+  },
+
+  number: {
+    color: "#15803d",
+    fontSize: "36px",
+    marginBottom: 0,
+  },
+
+  staffStatus: {
+    color: "#15803d",
+    fontWeight: "bold",
+    fontSize: "18px",
+  },
+
+  error: {
+    background: "#fee2e2",
+    color: "#991b1b",
+    border: "1px solid #fca5a5",
+    padding: "14px",
+    borderRadius: "8px",
+    margin: "20px 0",
+  },
+
+  sectionTitle: {
+    color: "#14532d",
+    fontSize: "22px",
+  },
+
+  description: {
+    color: "#475569",
+  },
+
+  input: {
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "14px",
+    margin: "15px 0",
+    border: "1px solid #94a3b8",
+    borderRadius: "7px",
+    background: "#ffffff",
+    color: "#172b1d",
+    fontSize: "15px",
+    outlineColor: "#15803d",
+  },
+
+  buttonGroup: {
+    display: "flex",
+    gap: "12px",
+    flexWrap: "wrap",
+  },
+
+  searchButton: {
+    background: "#15803d",
+    color: "#ffffff",
+    padding: "12px 20px",
+    border: "none",
+    borderRadius: "7px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+
+  showAllButton: {
+    background: "#334155",
+    color: "#ffffff",
+    padding: "12px 20px",
+    border: "none",
+    borderRadius: "7px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+
+  loading: {
+    color: "#334155",
+    padding: "20px 0",
+  },
+
+  tableWrapper: {
+    overflowX: "auto",
+    marginTop: "20px",
+  },
+
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    background: "#ffffff",
+  },
+
+  tableHeader: {
+    background: "#dcfce7",
+    color: "#14532d",
+  },
+
+  tableRow: {
+    background: "#ffffff",
+    color: "#172b1d",
+  },
+
+  cell: {
+    padding: "14px",
+    borderBottom: "1px solid #e2e8f0",
+    textAlign: "left",
+    color: "#172b1d",
+    whiteSpace: "nowrap",
+  },
+
+  points: {
+    padding: "14px",
+    borderBottom: "1px solid #e2e8f0",
+    color: "#15803d",
+    fontWeight: "bold",
+  },
+
+  empty: {
+    color: "#475569",
+    padding: "15px",
+  },
+};
