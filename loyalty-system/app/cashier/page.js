@@ -11,6 +11,22 @@ export default function CashierDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Safely handle JSON and HTML responses
+  async function getResponseData(response) {
+    const contentType = response.headers.get("content-type") || "";
+
+    if (!contentType.includes("application/json")) {
+      const text = await response.text();
+      console.error("Non-JSON API response:", text.slice(0, 300));
+
+      throw new Error(
+        `The server returned an unexpected response (HTTP ${response.status}). Check the API URL and Django server.`
+      );
+    }
+
+    return await response.json();
+  }
+
   async function loadDashboard() {
     setLoading(true);
     setError("");
@@ -28,19 +44,25 @@ export default function CashierDashboard() {
       setCashier(session.user);
 
       const response = await fetch("/api/backend/customers/", {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
+          Accept: "application/json",
         },
+        cache: "no-store",
       });
 
-      const data = await response.json();
+      const data = await getResponseData(response);
 
       if (!response.ok) {
-        throw new Error(data.error || data.detail || "Unable to load customers.");
+        throw new Error(
+          data.error || data.detail || "Unable to load customers."
+        );
       }
 
       setCustomers(data);
     } catch (err) {
+      console.error("Dashboard loading error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -59,22 +81,26 @@ export default function CashierDashboard() {
     try {
       const {
         data: { session },
+        error: sessionError,
       } = await supabase.auth.getSession();
 
-      if (!session) {
+      if (sessionError || !session) {
         throw new Error("Please log in again.");
       }
 
       const response = await fetch(
         `/api/backend/customers/?search=${encodeURIComponent(search)}`,
         {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${session.access_token}`,
+            Accept: "application/json",
           },
+          cache: "no-store",
         }
       );
 
-      const data = await response.json();
+      const data = await getResponseData(response);
 
       if (!response.ok) {
         throw new Error(data.error || data.detail || "Search failed.");
@@ -82,6 +108,7 @@ export default function CashierDashboard() {
 
       setCustomers(data);
     } catch (err) {
+      console.error("Customer search error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -205,9 +232,7 @@ export default function CashierDashboard() {
               </table>
 
               {customers.length === 0 && (
-                <p style={styles.empty}>
-                  No customers found.
-                </p>
+                <p style={styles.empty}>No customers found.</p>
               )}
             </div>
           )}
@@ -224,7 +249,6 @@ const styles = {
     fontFamily: "Arial, sans-serif",
     color: "#172b1d",
   },
-
   header: {
     background: "#14532d",
     color: "#ffffff",
@@ -235,19 +259,16 @@ const styles = {
     flexWrap: "wrap",
     gap: "15px",
   },
-
   logo: {
     margin: 0,
     fontSize: "28px",
     fontWeight: "bold",
     color: "#ffffff",
   },
-
   headerSubtitle: {
     margin: "5px 0 0",
     color: "#e0f2e5",
   },
-
   logoutButton: {
     padding: "11px 20px",
     background: "#ffffff",
@@ -257,31 +278,26 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
   },
-
   main: {
     maxWidth: "1100px",
     margin: "auto",
     padding: "35px 20px",
   },
-
   welcome: {
     color: "#14532d",
     fontSize: "27px",
     marginBottom: "8px",
   },
-
   email: {
     color: "#475569",
     fontSize: "15px",
   },
-
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
     gap: "20px",
     margin: "30px 0",
   },
-
   card: {
     background: "#ffffff",
     padding: "24px",
@@ -290,25 +306,21 @@ const styles = {
     boxShadow: "0 3px 10px rgba(0,0,0,0.06)",
     marginBottom: "20px",
   },
-
   cardTitle: {
     color: "#475569",
     fontSize: "16px",
     marginTop: 0,
   },
-
   number: {
     color: "#15803d",
     fontSize: "36px",
     marginBottom: 0,
   },
-
   staffStatus: {
     color: "#15803d",
     fontWeight: "bold",
     fontSize: "18px",
   },
-
   error: {
     background: "#fee2e2",
     color: "#991b1b",
@@ -317,16 +329,13 @@ const styles = {
     borderRadius: "8px",
     margin: "20px 0",
   },
-
   sectionTitle: {
     color: "#14532d",
     fontSize: "22px",
   },
-
   description: {
     color: "#475569",
   },
-
   input: {
     width: "100%",
     boxSizing: "border-box",
@@ -339,13 +348,11 @@ const styles = {
     fontSize: "15px",
     outlineColor: "#15803d",
   },
-
   buttonGroup: {
     display: "flex",
     gap: "12px",
     flexWrap: "wrap",
   },
-
   searchButton: {
     background: "#15803d",
     color: "#ffffff",
@@ -355,7 +362,6 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
   },
-
   showAllButton: {
     background: "#334155",
     color: "#ffffff",
@@ -365,33 +371,27 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
   },
-
   loading: {
     color: "#334155",
     padding: "20px 0",
   },
-
   tableWrapper: {
     overflowX: "auto",
     marginTop: "20px",
   },
-
   table: {
     width: "100%",
     borderCollapse: "collapse",
     background: "#ffffff",
   },
-
   tableHeader: {
     background: "#dcfce7",
     color: "#14532d",
   },
-
   tableRow: {
     background: "#ffffff",
     color: "#172b1d",
   },
-
   cell: {
     padding: "14px",
     borderBottom: "1px solid #e2e8f0",
@@ -399,14 +399,12 @@ const styles = {
     color: "#172b1d",
     whiteSpace: "nowrap",
   },
-
   points: {
     padding: "14px",
     borderBottom: "1px solid #e2e8f0",
     color: "#15803d",
     fontWeight: "bold",
   },
-
   empty: {
     color: "#475569",
     padding: "15px",

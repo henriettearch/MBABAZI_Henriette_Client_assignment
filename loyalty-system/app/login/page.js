@@ -35,21 +35,32 @@ export default function LoginPage() {
         password: form.password,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (!data.user) {
         throw new Error("Login failed. Please try again.");
       }
 
-      setMessage("Welcome back to FreshMart! Login successful.");
+      // Check whether this user has a staff role.
+      const { data: staffRole, error: roleError } = await supabase
+        .from("staff_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
 
-      // Redirect to homepage for now.
-      // We can create a customer dashboard next.
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
+      if (roleError) {
+        throw new Error("Unable to verify your account role. Please try again.");
+      }
+
+      setMessage("Welcome back to FreshMart!");
+
+      if (staffRole?.role === "cashier") {
+        router.replace("/cashier");
+      } else if (staffRole?.role === "admin") {
+        router.replace("/admin-dashboard");
+      } else {
+        router.replace("/dashboard");
+      }
 
     } catch (error) {
       setMessage(
