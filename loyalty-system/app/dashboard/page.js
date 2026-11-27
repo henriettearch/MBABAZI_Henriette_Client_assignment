@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -35,6 +36,9 @@ export default function Dashboard() {
   const [category, setCategory] = useState("All");
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
+
+  // Selected payment method
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   useEffect(() => {
     async function loadCustomer() {
@@ -306,12 +310,35 @@ export default function Dashboard() {
                     <p className="text-sm text-gray-500">Order total</p>
                     <p className="text-2xl font-black text-green-900">{money(total)}</p>
                   </div>
-                  <button
-                    onClick={() => alert("Checkout will be connected to the order system in our next step.")}
-                    className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-7 py-3 font-bold"
-                  >
-                    Proceed to checkout
-                  </button>
+
+                  {/* Payment method selection */}
+                  <div className="flex flex-col gap-3 w-full sm:w-auto">
+                    <label className="font-semibold text-gray-700">
+                      Choose your payment method
+                    </label>
+
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="border border-gray-300 rounded-xl px-4 py-3 bg-white"
+                    >
+                      <option value="cash">Cash payment</option>
+                      <option value="online">Online payment</option>
+                    </select>
+
+                    <button
+                      onClick={() => {
+                        if (paymentMethod === "cash") {
+                          alert("You selected cash payment. Please pay at the cashier.");
+                        } else {
+                          alert("You selected online payment. Online payment processing will be connected once a payment provider is integrated.");
+                        }
+                      }}
+                      className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-7 py-3 font-bold"
+                    >
+                      Continue to payment
+                    </button>
+                  </div>
                 </div>
               </>
             )}
